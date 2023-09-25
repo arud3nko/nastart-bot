@@ -10,26 +10,34 @@ main = ReplyKeyboardMarkup(keyboard=main_kb,
                            resize_keyboard=True,
                            input_field_placeholder="Выберите")
 
-inline_kb_accept = [
-    [InlineKeyboardButton(text="ПРИНЯТЬ", callback_data="accept_order"),
-     InlineKeyboardButton(text="ОТМЕНИТЬ", url="https://ya.ru")]
-]
 
-inline_kb_send_to_delivery = [
-    [InlineKeyboardButton(text="Отправить в доставку".upper(), callback_data="send_to_delivery")],
-    [InlineKeyboardButton(text="Отменить".upper(), url="https://ya.ru")]
-]
+def build_kb_accept(ID: int) -> InlineKeyboardMarkup:
+    inline_kb_accept = [
+        [InlineKeyboardButton(text="ПРИНЯТЬ", callback_data=f"accept_order::{ID}"),
+         InlineKeyboardButton(text="ОТМЕНИТЬ", callback_data=f"cancel_order::{ID}")]
+    ]
 
-inline_kb_confirm_send_to_delivery = [
-    [InlineKeyboardButton(text="Подвердить".upper(), callback_data="confirm_send_to_delivery"),
-     InlineKeyboardButton(text="Отменить".upper(), url="https://ya.ru")]
-]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_accept)
+
+
+def build_kb_send_to_delivery(ID: int) -> InlineKeyboardMarkup:
+    inline_kb_send_to_delivery = [
+        [InlineKeyboardButton(text="Отправить в доставку".upper(), callback_data=f"send_to_delivery::{ID}")],
+        [InlineKeyboardButton(text="Отменить".upper(), callback_data=f"cancel_order::{ID}")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_send_to_delivery)
+
+
+def build_kb_confirm_delivery(ID: int) -> InlineKeyboardMarkup:
+    inline_kb_confirm_send_to_delivery = [
+        [InlineKeyboardButton(text="Подтвердить".upper(), callback_data=f"confirm_delivery::{ID}"),
+         InlineKeyboardButton(text="Отменить".upper(), callback_data=f"cancel_order::{ID}")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_confirm_send_to_delivery)
+
 
 inline_kb_cancel_delivery = [
     [InlineKeyboardButton(text="Отменить доставку".upper(), callback_data="cancel_delivery")]
 ]
 
-inline_accept = InlineKeyboardMarkup(inline_keyboard=inline_kb_accept)
-inline_send_to_delivery = InlineKeyboardMarkup(inline_keyboard=inline_kb_send_to_delivery)
-inline_confirm_send_to_delivery = InlineKeyboardMarkup(inline_keyboard=inline_kb_confirm_send_to_delivery)
 inline_cancel_delivery = InlineKeyboardMarkup(inline_keyboard=inline_kb_cancel_delivery)

@@ -10,7 +10,7 @@ from app.config.config import (DB_HOST, DB_PORT,
 
 from typing import Union, Any
 
-from pypika import Query, Table
+from pypika import Query, Table, Order
 
 
 class DB:
@@ -35,6 +35,12 @@ class DB:
             q = Query.from_(table).select(table.star)
         result = await self.__execute_query(q.get_sql(quote_char=None))
         return result
+
+    async def select_where(self, table_name: str, where_cond, where_value) -> list:
+        table = Table(table_name)
+        q = Query.from_(table).select(table.star).where(getattr(table, where_cond) == where_value)
+        result = await self.__execute_query(q.get_sql(quote_char=None))
+        return result[0]
 
     async def insert(self, table_name: str, **kwargs: Any) -> bool:
         try:
@@ -79,13 +85,25 @@ class DB:
             return False
         return True
 
+    async def get_last_row_id(self, table_name: str):
+        try:
+            table = Table(table_name)
+            q = Query.from_(table).select('id').orderby('id', order=Order.desc).limit(1)
+            result = await self.__execute_query(q.get_sql(quote_char=None))
+            return int(result[0][0])
+        except Error as err:
+            logging.error(f"Error while getting LRid to {DB_USERNAME}@{DB_HOST}:{DB_PORT} | {err}")
+        finally:
+            await self.__disconnect()
+
     async def __connect(self) -> Union[mysql.connector.MySQLConnection, None]:
         try:
             self.connection = mysql.connector.connect(
                 host=self.HOST,
                 user=self.USERNAME,
                 password=self.PASSWORD,
-                database=self.DATABASE
+                database=self.DATABASE,
+                charset='utf8'
             )
             if self.connection.is_connected():
                 logging.info(f"Successfully connected to {DB_USERNAME}@{DB_HOST}:{DB_PORT}")
@@ -114,12 +132,5 @@ class DB:
             await self.__disconnect()
 
 
-async def test():
-    db = DB()
-    print(await db.select('test'))
-    print(await db.update('test', 'order_id', 17, order_id=1999))
-    print(await db.select('test'))
-
-
 if __name__ == '__main__':
-    asyncio.run(test())
+    pass
