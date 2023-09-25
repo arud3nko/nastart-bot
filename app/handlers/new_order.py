@@ -49,7 +49,7 @@ async def format_dict(json_request: Any) -> dict:
         'customer_name': json_request['customer']['name'],
         'customer_contact_phone': json_request['customer']['contact_phone'],
         'order_wc_id': json_request['order']['wc_id'],
-        'order_products': json.dumps(json_request['order']['products']),
+        'order_products': json.dumps(json_request['order']['products'], ensure_ascii=False),
         'order_customer_note': json_request['order']['customer_note'],
         'order_price': json_request['order']['price'],
         'order_payment_method_title': json_request['order']['payment_type'],

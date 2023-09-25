@@ -36,6 +36,7 @@ async def send_to_delivery_handler(callback: types.CallbackQuery):
     order = Order(orders_table_name='orders')
     await order.from_db(ID=order_id)
     await order.update_status("send_to_delivery")
+    await order.create_claim()
 
     await callback.message.answer(f"*Доставка заказа* [№{order.order_wc_id}] от {order.order_created_time}\n\n"
                                   "*Стоимость доставки:* 334,56 руб.\n\n"
