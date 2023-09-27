@@ -40,6 +40,8 @@ class DB:
         table = Table(table_name)
         q = Query.from_(table).select(table.star).where(getattr(table, where_cond) == where_value)
         result = await self.__execute_query(q.get_sql(quote_char=None))
+        if not result:
+            return []
         return result[0]
 
     async def insert(self, table_name: str, **kwargs: Any) -> bool:
@@ -90,6 +92,8 @@ class DB:
             table = Table(table_name)
             q = Query.from_(table).select('id').orderby('id', order=Order.desc).limit(1)
             result = await self.__execute_query(q.get_sql(quote_char=None))
+            if not result:
+                return 1
             return int(result[0][0])
         except Error as err:
             logging.error(f"Error while getting LRid to {DB_USERNAME}@{DB_HOST}:{DB_PORT} | {err}")

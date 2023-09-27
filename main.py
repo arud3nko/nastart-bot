@@ -18,7 +18,7 @@ WEB_SERVER_PORT = 8080
 
 WEBHOOK_PATH = "/webhook"
 WEBHOOK_SECRET = "my-secret"
-BASE_WEBHOOK_URL = "https://cf0e-37-147-31-102.ngrok-free.app"
+BASE_WEBHOOK_URL = "https://008e-37-147-31-15.ngrok-free.app"
 
 router = Router()
 

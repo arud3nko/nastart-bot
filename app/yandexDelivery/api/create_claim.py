@@ -8,13 +8,14 @@ def build_create_claim_response(shop_title: str, shop_contact_phone: str, order_
       "auto_accept": False,
       "client_requirements": {
         "cargo_options": [
-          "auto_courier"
+          "auto_courier",
+          "thermobag"
         ],
         "taxi_class": "express"
       },
       "comment": f"Еда из ресторана {shop_title}",
       "emergency_contact": {
-        "name": "test",
+        "name": shop_contact_name,
         "phone": shop_contact_phone,
       },
       "items": [
@@ -67,6 +68,7 @@ def build_create_claim_response(shop_title: str, shop_contact_phone: str, order_
           "visit_order": 2
         }
       ],
+      "skip_door_to_door": False,
     }
 
     return request
