@@ -7,7 +7,8 @@ from contextlib import suppress
 
 from app.keyboards.keyboards import (build_kb_send_to_delivery,
                                      build_kb_confirm_delivery,
-                                     build_kb_cancel_delivery)
+                                     build_kb_cancel_delivery,
+                                     build_kb_sure_cancel_delivery)
 
 from app.yandexDelivery.order import Order
 
@@ -57,7 +58,7 @@ async def send_to_delivery_handler(callback: types.CallbackQuery):
 
     message = await callback.message.answer(
         f"*Доставка заказа* [№{order.order_wc_id}] от {order.order_created_time}\n\n"
-        f"*Стоимость доставки:* {float(delivery_price):.2f} руб.\n\n"
+        f"*Стоимость доставки:* {int(float(delivery_price))} руб.\n\n"
         "*Подтвердить отправку в доставку?*",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=build_kb_confirm_delivery(order_id)
@@ -112,20 +113,24 @@ async def confirm_delivery_handler(callback: types.CallbackQuery):
         pickup_to = str(route_points[0]['expected_visit_interval']['to'])
         deliver_to = str(route_points[1]['expected_visit_interval']['to'])
 
-        pickup_to_form = pickup_to.split('T')[0] + ' ' + pickup_to.split('T')[1]
+        pickup_to_form = pickup_to.split('T')[0] + 'T' + pickup_to.split('T')[1]
+        deliver_to_form = deliver_to.split('T')[0] + 'T' + deliver_to.split('T')[1]
+
         pickup_to_form = datetime.fromisoformat(pickup_to_form)
         pickup_to = pickup_to_form.astimezone(shop_tz)
         pickup_to = pickup_to.strftime("%H:%M")
 
-        deliver_to_form = deliver_to.split('T')[0] + ' ' + deliver_to.split('T')[1]
         deliver_to_form = datetime.fromisoformat(deliver_to_form)
         deliver_to = deliver_to_form.astimezone(shop_tz)
         deliver_to = deliver_to.strftime("%H:%M")
+
+        courier_phone_number, courier_extended_number = await order.get_courier_phone_number()
 
         await message.answer(
             f"*Доставка заказа* [№{order.order_wc_id}] от {order.order_created_time}\n\n"
             f"*Найден курьер!*\n\n"
             f"*Имя:* {courier_info['courier_name']}\n"
+            f"*Телефон:* {courier_phone_number} доб. {courier_extended_number}\n"
             f"*Приедет на* {courier_info['car_color']} {courier_info['car_model']}\n"
             f"*Номер авто:* {courier_car_number}\n"
             f"*Прибудет в ресторан до* {pickup_to}\n"
@@ -143,6 +148,40 @@ async def confirm_delivery_handler(callback: types.CallbackQuery):
 
 @router.callback_query(F.data.startswith("cancel_delivery::"))
 async def cancel_delivery_handler(callback: types.CallbackQuery):
+    """
+
+    > 8.12.2023
+        Дополнительное подтверждение отмены доставки, добавлено так как нередко администраторы случайно нажимают
+        кнопку отмены
+
+    :param callback:
+    :return:
+    """
+    order_id = int(callback.data.split("::")[1])
+    order = Order(orders_table_name='orders')
+    await order.from_db(ID=order_id)
+
+    await callback.message.answer(f"*Доставка заказа* [№{order.order_wc_id}] от {order.order_created_time}\n\n"
+                                  "*Вы уверены, что хотите ОТМЕНИТЬ доставку?* ",
+                                  parse_mode=ParseMode.MARKDOWN,
+                                  reply_markup=build_kb_sure_cancel_delivery(order_id))
+
+    with suppress(TelegramBadRequest):
+        await callback.message.delete()
+
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("cancel_delivery_sure::"))
+async def sure_cancel_delivery_handler(callback: types.CallbackQuery):
+    """
+
+    > 8.12.2023
+        Отмена доставки после подтверждения
+
+    :param callback:
+    :return:
+    """
     order_id = int(callback.data.split("::")[1])
     order = Order(orders_table_name='orders')
     await order.from_db(ID=order_id)
@@ -153,6 +192,26 @@ async def cancel_delivery_handler(callback: types.CallbackQuery):
                                   "*Доставка отменена* ",
                                   parse_mode=ParseMode.MARKDOWN,
                                   reply_markup=None)
+
+    with suppress(TelegramBadRequest):
+        await callback.message.delete()
+
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("cancel_delivery_deny::"))
+async def sure_cancel_delivery_handler(callback: types.CallbackQuery):
+    """
+
+    > 8.12.2023
+        Отмена отмены доставки (если не подтвердили доставку)
+
+    :param callback:
+    :return:
+    """
+    order_id = int(callback.data.split("::")[1])
+    order = Order(orders_table_name='orders')
+    await order.from_db(ID=order_id)
 
     with suppress(TelegramBadRequest):
         await callback.message.delete()

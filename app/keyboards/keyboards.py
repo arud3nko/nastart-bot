@@ -41,3 +41,11 @@ def build_kb_cancel_delivery(ID: int) -> InlineKeyboardMarkup:
     ]
 
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_cancel_delivery)
+
+def build_kb_sure_cancel_delivery(ID: int) -> InlineKeyboardMarkup:
+    inline_kb_sure_cancel_delivery = [
+        [InlineKeyboardButton(text="Подтвердить".upper(), callback_data=f"cancel_delivery_sure::{ID}")],
+        [InlineKeyboardButton(text="Не отменять".upper(), callback_data=f"cancel_delivery_deny::{ID}")]
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_sure_cancel_delivery)
