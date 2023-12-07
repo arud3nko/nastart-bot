@@ -113,14 +113,23 @@ async def confirm_delivery_handler(callback: types.CallbackQuery):
         pickup_to = str(route_points[0]['expected_visit_interval']['to'])
         deliver_to = str(route_points[1]['expected_visit_interval']['to'])
 
+
         pickup_to_form = pickup_to.split('T')[0] + 'T' + pickup_to.split('T')[1]
         deliver_to_form = deliver_to.split('T')[0] + 'T' + deliver_to.split('T')[1]
 
-        pickup_to_form = datetime.fromisoformat(pickup_to_form)
+        try:
+            pickup_to_form = datetime.fromisoformat(pickup_to_form)
+            deliver_to_form = datetime.fromisoformat(deliver_to_form)
+        except ValueError:
+            pickup_to_form = datetime.fromisoformat(
+                pickup_to_form.replace(pickup_to_form.split('.')[-1].split('+')[0], "000"))
+            deliver_to_form = datetime.fromisoformat(
+                deliver_to_form.replace(deliver_to_form.split('.')[-1].split('+')[0], "000"))
+
+
         pickup_to = pickup_to_form.astimezone(shop_tz)
         pickup_to = pickup_to.strftime("%H:%M")
 
-        deliver_to_form = datetime.fromisoformat(deliver_to_form)
         deliver_to = deliver_to_form.astimezone(shop_tz)
         deliver_to = deliver_to.strftime("%H:%M")
 
